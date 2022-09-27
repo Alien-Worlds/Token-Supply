@@ -1,32 +1,67 @@
 {
-  "name": "rng",
+  "name": "landholders-batch-runner",
   "version": "1.0.0",
-  "description": "",
-  "main": "daemon.js",
+  "description": "script to run the landholders contract process and claim actions",
+  "main": "index.js",
+  "engines": {
+    "node": ">=17.3.0 <18.0.0",
+    "npm": ">=8.3.0 <9.0.0"
+  },
   "scripts": {
-    "test": "mocha -r ts-node/register **/*.tests.ts",
     "run": "node dist/landholder-runner-daemon.js",
-    "build": "tsc -p ."
+    "build": "node ./scripts/create-env.js && yarn clean && tsc -p .",
+    "lint": "yarn lint-prettier && yarn lint-es",
+    "lint-fix": "yarn lint-prettier-fix && yarn lint-es-fix",
+    "lint-es": "eslint \"src/**/*\"",
+    "lint-es-fix": "eslint --fix \"src/**/*\"",
+    "lint-prettier": "yarn prettier --check \"src/\"",
+    "lint-prettier-fix": "yarn prettier --write \"src/\"",
+    "test:unit": "jest --config=jest.config.unit.js",
+    "test:api": "jest --config=jest.config.api.js",
+    "build-tests:api": "node ./scripts/create-env.js && yarn clean && tsc",
+    "clean": "rm -rf ./dist"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged",
+      "pre-push": "lint-staged && yarn test:unit"
+    }
+  },
+  "lint-staged": {
+    "*": "prettier --write --ignore-unknown",
+    "*.{ts,tsx,js,jsx}": "eslint --fix'"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@types/dotenv": "^8.2.0",
     "dotenv": "^10.0.0",
     "eosio-helpers": "^0.1.15",
     "eosjs": "^22.0.0",
     "node-fetch": "2.0",
     "sha256-uint8array": "^0.10.1",
     "text-encoding": "^0.7.0",
-    "tsc": "^2.0.3",
-    "typescript": "^4.4.4"
+    "tsc": "^2.0.3"
   },
   "devDependencies": {
-    "@types/chai": "^4.2.22",
-    "@types/chai-as-promised": "^7.1.4",
-    "@types/mocha": "^9.0.0",
-    "chai": "^4.3.4",
-    "chai-as-promised": "^7.1.1",
-    "mocha": "^9.1.3"
+    "@types/dotenv": "^8.2.0",
+    "@types/jest": "^27.0.3",
+    "@typescript-eslint/eslint-plugin": "^5.9.1",
+    "@typescript-eslint/parser": "^5.9.1",
+    "eslint": "^7.32.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-config-recommended": "^4.1.0",
+    "eslint-config-standard": "^16.0.3",
+    "eslint-plugin-import": "^2.25.4",
+    "eslint-plugin-jest": "^25.7.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-promise": "^5.2.0",
+    "husky": "^7.0.4",
+    "jest": "^27.4.5",
+    "lint-staged": "^12.1.7",
+    "prettier": "2.5.1",
+    "ts-jest": "^27.1.3",
+    "tsc-watch": "^4.6.0",
+    "typescript": "^4.5.4"
   }
 }

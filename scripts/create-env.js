@@ -4,8 +4,9 @@ const fs = require('fs');
 const nodeEnv = process.env.NODE_ENV;
 
 try {
+    if (fs.existsSync(`./.env`)) return;
     fs.copyFileSync(`${__dirname}/env_template`, nodeEnv ? `./.env-${nodeEnv}` : `./.env`);
     process.exit(0);
-} catch(err) {
+} catch (err) {
     process.exit(1)
 }

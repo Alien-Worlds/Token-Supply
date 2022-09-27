@@ -4,15 +4,15 @@ dotenv.config();
 
 import { BatchRun, TableFetcher, SingleRun } from 'eosio-helpers';
 
-const terra_account = process.env.LANDHOLDERS_ACCOUNT!;
-const terraWorldXferKey = process.env.XFER_PRIVATE_KEY!;
-const endpoint = process.env.ENDPOINT!;
-const batchPermission = process.env.BATCH_PERMISSION!;
+const terra_account = process.env.LANDHOLDERS_ACCOUNT;
+const terraWorldXferKey = process.env.XFER_PRIVATE_KEY;
+const endpoint = process.env.ENDPOINT;
+const batchPermission = process.env.BATCH_PERMISSION;
 
-let sleepTime = 2000; // ms units
+const sleepTime = 2000; // ms units
 
 export const Sleep = async (ms: number) => {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     setTimeout(resolve, ms);
   });
 };
@@ -38,7 +38,7 @@ const execute_run_action = async (
     private_keys: [{ pk: terraWorldXferKey }],
     submit_to_blockchain,
   });
-  console.log('run_batch result:', result);
+  console.log('run_batch result:', result.transaction_id);
 };
 
 /**
@@ -53,14 +53,20 @@ const processBatch_recursively = async (
     await execute_run_action(batch_size, submit_to_blockchain);
     await Sleep(sleepTime);
     await processBatch_recursively(batch_size, submit_to_blockchain);
-  } catch (error: any) {
-    if (error.message.includes('Not enough pay to distribute')) {
-      console.log(
-        'Completed processing pay batches with not enough pay to distribute.'
-      );
-    } else {
-      // Unexpected error
-      throw error;
+  } catch (error) {
+    if (error.message) {
+      if (error.message.includes('RpcError')) {
+        console.log('will retry now after a temporary error.');
+        await Sleep(sleepTime);
+        await processBatch_recursively(batch_size, submit_to_blockchain);
+      } else if (error.message.includes('Not enough pay to distribute')) {
+        console.log(
+          'Completed processing pay batches with not enough pay to distribute.'
+        );
+      } else {
+        // Unexpected error
+        throw error;
+      }
     }
   }
 };
@@ -76,7 +82,7 @@ const run_claims = async (
   const claimers: { receiver: string; payoutAmount: string }[] =
     await TableFetcher({
       endpoint: endpoint,
-      batch_size,
+      batch_size: 1000,
       limit: 5000,
       codeContract: terra_account,
       table: 'payouts',
@@ -86,10 +92,10 @@ const run_claims = async (
     });
   console.log('Processing for', claimers.length, 'claimers.');
 
-  const result = await BatchRun({
+  await BatchRun({
     fields: claimers,
     batch_size,
-    createAction: async (c: { receiver: any }) => ({
+    createAction: async (c: { receiver: string }) => ({
       authorization: [{ actor: terra_account, permission: batchPermission }],
       account: terra_account,
       name: 'claimpay',
@@ -99,22 +105,23 @@ const run_claims = async (
     private_keys: [{ pk: terraWorldXferKey }],
     submit_to_blockchain,
   });
+  console.log('Completed paying out to', claimers.length, 'land holders.');
 };
 
 const run = async () => {
-  const batch_size: number = JSON.parse(process.env.BATCH_SIZE!);
+  const batch_size: number = JSON.parse(process.env.BATCH_SIZE);
   const submit_to_blockchain: boolean = JSON.parse(
-    process.env.SUBMIT_TO_BLOCKCHAIN!
+    process.env.SUBMIT_TO_BLOCKCHAIN
   );
 
   console.log('batch size:', batch_size);
 
-  while (true) {
+  for (;;) {
     try {
       console.log('Timestamp:', new Date());
       await processBatch_recursively(batch_size, submit_to_blockchain);
       await run_claims(batch_size, submit_to_blockchain);
-    } catch (error: any) {
+    } catch (error) {
       console.log('Unexpected error:', error);
     }
     await Sleep(60 * 60 * 1000);

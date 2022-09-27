@@ -2,20 +2,10 @@ version: "3.7"
 
 services:
     landholders-processor:
+         image: ${DOCKER_REGISTRY}/landholders_batch_runner
          build:
            context: .
            cache_from:
-            - landholders-processor:latest
-         restart: unless-stopped
-         environment:
-           # PubKey: EOS5isff3TDGr9wB5hvRft23DUZKY7Uf5NxnLvzvLErma4o8sm1KB
-          - XFER_PRIVATE_KEY
-          - LANDHOLDERS_ACCOUNT=terra.worlds
-          - BATCH_PERMISSION=runbatch
-          - ENDPOINT=https://wax.eosphere.io
-          # - ENDPOINT=http://172.17.0.2:8888
-          - BATCH_SIZE=200
-          - SUBMIT_TO_BLOCKCHAIN=true
-          - LOGGING_VERBOSE=false
-         entrypoint: sh -c "node dist/landholder-runner-daemon.js"
+            - ${DOCKER_REGISTRY}/landholders_batch_runner
+         restart: on-failure
 

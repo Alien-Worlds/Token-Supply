@@ -13,3 +13,4 @@ COPY package.json tsconfig.json yarn.lock /usr/
 
 RUN yarn
 RUN yarn build
+ENTRYPOINT [ "node" "dist/landholder-runner-daemon.js" ]

@@ -2,7 +2,7 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import { BatchRun, TableFetcher, SingleRun } from 'eosio-helpers';
+import { BatchRun, TableFetcher, SingleRun, Sleep } from 'eosio-helpers';
 
 const terra_account = process.env.LANDHOLDERS_ACCOUNT;
 const terraWorldXferKey = process.env.XFER_PRIVATE_KEY;
@@ -10,12 +10,6 @@ const endpoint = process.env.ENDPOINT;
 const batchPermission = process.env.BATCH_PERMISSION;
 
 const sleepTime = 2000; // ms units
-
-export const Sleep = async (ms: number) => {
-  return new Promise(resolve => {
-    setTimeout(resolve, ms);
-  });
-};
 
 /**
  * Execute the run contract action. This should be run in a loop until it throws an error
@@ -45,27 +39,31 @@ const execute_run_action = async (
  * Execute the run action on chain in a recursive loop until the batch run is complete
  * @param batch_size determines the number of lands to loop within contract run action.
  */
-const processBatch_recursively = async (
+const process_due_payments = async (
   batch_size: number,
   submit_to_blockchain: boolean
 ) => {
-  try {
-    await execute_run_action(batch_size, submit_to_blockchain);
-    await Sleep(sleepTime);
-    await processBatch_recursively(batch_size, submit_to_blockchain);
-  } catch (error) {
-    if (error.message) {
-      if (error.message.includes('RpcError')) {
-        console.log('will retry now after a temporary error.');
-        await Sleep(sleepTime);
-        await processBatch_recursively(batch_size, submit_to_blockchain);
-      } else if (error.message.includes('Not enough pay to distribute')) {
-        console.log(
-          'Completed processing pay batches with not enough pay to distribute.'
-        );
-      } else {
-        // Unexpected error
-        throw error;
+  let should_keep_trying = true;
+
+  while (should_keep_trying) {
+    try {
+      await execute_run_action(batch_size, submit_to_blockchain);
+    } catch (error) {
+      console.log('Caught error:', error);
+
+      if (error.message) {
+        if (error.message.includes('RpcError')) {
+          console.log('will retry now after a temporary error.');
+          await Sleep(sleepTime);
+        } else if (error.message.includes('Not enough pay to distribute')) {
+          console.log(
+            'Completed processing pay batches with not enough pay to distribute.'
+          );
+          should_keep_trying = false;
+        } else {
+          // Unexpected error
+          throw error;
+        }
       }
     }
   }
@@ -116,16 +114,16 @@ const run = async () => {
 
   console.log('batch size:', batch_size);
 
-  for (;;) {
-    try {
-      console.log('Timestamp:', new Date());
-      await processBatch_recursively(batch_size, submit_to_blockchain);
-      await run_claims(batch_size, submit_to_blockchain);
-    } catch (error) {
-      console.log('Unexpected error:', error);
-    }
-    await Sleep(60 * 60 * 1000);
+  // for (;;) {
+  try {
+    console.log('Timestamp:', new Date());
+    await process_due_payments(batch_size, submit_to_blockchain);
+    await run_claims(batch_size, submit_to_blockchain);
+  } catch (error) {
+    console.log('Unexpected error:', error);
   }
+  //   await Sleep(23 * 60 * 60 * 1000);
+  // }
 };
 
 run();

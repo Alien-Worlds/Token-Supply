@@ -1,7 +1,7 @@
 {
   "name": "landholders-batch-runner",
   "version": "1.0.0",
-  "description": "script to run the landholders contract process and claim actions",
+  "description": "Token Supply function",
   "main": "index.js",
   "scripts": {
     "run": "node dist/landholder-runner-daemon.js",
@@ -34,6 +34,7 @@
     "eosio-helpers": "^0.1.15",
     "eosjs": "^22.0.0",
     "esbuild": "^0.15.9",
+    "ethers": "^5.7.2",
     "node-fetch": "2.0",
     "sha256-uint8array": "^0.10.1",
     "text-encoding": "^0.7.0",

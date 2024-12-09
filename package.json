@@ -17,7 +17,7 @@
     "eosjs": "^22.0.0",
     "ethers": "^5.7.2",
     "express": "^4.21.2",
-    "node-fetch": "2.0",
+    "node-fetch": "2.6",
     "sha256-uint8array": "^0.10.1",
     "text-encoding": "^0.7.0",
     "ts-node": "^10.9.2",

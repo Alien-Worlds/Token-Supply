@@ -1,6 +1,8 @@
 services:
   app:
       build: .
+      ports:
+          - "3000:3000"
       environment:
           - ETH_ENDPOINT=${ETH_ENDPOINT}
           - ETH_TOKEN_CONTRACT=${ETH_TOKEN_CONTRACT}

@@ -1,16 +1,24 @@
-FROM node:17-alpine3.12
+# BUILDER
 
-ARG NODE_ENV
-ENV NODE_ENV=$NODE_ENV
+FROM node:18-alpine AS app-builder
+RUN apk add --no-cache --virtual build-dependencies curl git
 
-RUN mkdir -p /usr
+COPY --chown=node . /var/scripts/token-supply
 
-WORKDIR /usr
+USER node
+WORKDIR /var/scripts/token-supply
 
-COPY src src
-COPY scripts scripts
-COPY package.json tsconfig.json yarn.lock /usr/
+RUN npm install --omit=dev
+RUN npm run build
 
-RUN yarn
-RUN yarn build
-ENTRYPOINT [ "node" "dist/landholder-runner-daemon.js" ]
+# PRODUCTION
+
+FROM node:18-alpine AS app
+LABEL org.opencontainers.image.vendor='Dacoco GMBH' \
+      org.opencontainers.image.description='Token Supply API'
+
+COPY --chown=node --from=app-builder /var/scripts/token-supply /var/scripts/token-supply
+USER node
+WORKDIR /var/scripts/token-supply
+
+CMD [ "node", "--version" ]

@@ -1,63 +1,43 @@
-#!/usr/bin/env node
 import * as dotenv from 'dotenv';
-import { ALBEvent } from 'aws-lambda';
 dotenv.config();
 
-import config from './config';
+const WAX_ENDPOINT = process.env.WAX_ENDPOINT;
+const ETH_ENDPOINT = process.env.ETH_ENDPOINT;
+const BSC_ENDPOINT = process.env.BSC_ENDPOINT;
+const ETH_TOKEN_CONTRACT = process.env.ETH_TOKEN_CONTRACT;
+const BSC_TOKEN_CONTRACT = process.env.BSC_TOKEN_CONTRACT;
+const SERVER_PORT = process.env.SERVER_PORT;
 
-// import yargs from 'yargs';
 import { WaxService } from './WaxService';
 import { EVMContractService } from './EVMContractService';
 import { getTokenSupplies } from './getTokenSupplies';
 import { contractInterface } from './common';
 
-/**
- * Represents the available /asset request query options
- * @type
- */
-type TokenRequestQueryOptions = {
-  type?: 'circulating' | 'supply' | 'detailed';
-  offset?: number;
-  id?: string;
-  owner?: string;
-  schema?: string;
-};
+import express from 'express';
 
-export const handler = async (event: ALBEvent) => {
-  let type: 'circulating' | 'supply' | 'detailed' = 'circulating';
-  let localised = null;
+const app = express();
 
-  if (event.queryStringParameters) {
-    const params = event.queryStringParameters;
-    switch (params['type']) {
-      case 'detailed':
-        type = 'detailed';
-        break;
-      case 'supply':
-        type = 'supply';
-        break;
-      default:
-        type = 'circulating';
-    }
-    localised = params['localised'];
-  }
-  return await getSupply(type, localised);
-};
+app.get('/token', async (req, res) => {
+  const { type, localised } = req.query;
+  const _type = typeof type === 'string' ? type : 'circulating';
+  const _localised = typeof localised === 'string' ? localised : null;
+  const _res = await getSupply(_type, _localised);
+  res.json(_res);
+});
 
 export async function getSupply(type: string, localised: string) {
-  const waxService = new WaxService(config.eos.endpoint);
+  const waxService = new WaxService(WAX_ENDPOINT);
   const ethContractService = new EVMContractService(
-    config.eth.endpoint,
-    config.eth.tokenContract,
+    ETH_ENDPOINT,
+    ETH_TOKEN_CONTRACT,
     contractInterface
   );
   const bscContractService = new EVMContractService(
-    config.bsc.endpoint,
-    config.bsc.tokenContract,
+    BSC_ENDPOINT,
+    BSC_TOKEN_CONTRACT,
     contractInterface
   );
 
-  // const { type }: TokenRequestQueryOptions = request.query || {};
   const res = await getTokenSupplies(
     type,
     waxService,
@@ -66,11 +46,11 @@ export async function getSupply(type: string, localised: string) {
     localised
   );
 
-  console.log(JSON.stringify(res, null, 4));
+  // console.log(JSON.stringify(res, null, 4));
 
-  const response = {
-    statusCode: 200,
-    body: res,
-  };
-  return response;
+  return res;
 }
+
+app.listen(SERVER_PORT, () => {
+  console.log(`Server is running on port ${SERVER_PORT}`);
+});

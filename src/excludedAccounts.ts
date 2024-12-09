@@ -5,10 +5,10 @@ export const excludedEthAccounts: { description: string; account: string }[] = [
 
 export const excludedBscAccounts: { description: string; account: string }[] = [
   { description: '', account: '0x5903b5f7eb3733fec8477be1b0a0fd149b33b547' },
-  {
-    description: 'Binance Mission Deployer account',
-    account: '0x3b8eC92FF921A0A4b9Cbc7acf7e33Ab042c46628',
-  },
+  // {
+  //   description: 'Binance Mission Deployer account',
+  //   account: '0x3b8eC92FF921A0A4b9Cbc7acf7e33Ab042c46628',
+  // },
 ];
 
 export const excludedWaxAccounts: { description: string; account: string }[] = [
@@ -45,9 +45,9 @@ export const excludedWaxAccounts: { description: string; account: string }[] = [
   { description: '', account: 'open.worlds' },
   { description: 'Treasury account for Planet Eyeke', account: 'eyeke.world' },
   { description: 'Treasury account for Planet Veles', account: 'veles.world' },
-  { description: 'Treasury account for Planet Naron', account: 'naron.world' },
-  {
-    description: 'Treasury account for Binance Missions',
-    account: 'bina.world',
-  },
+  // { description: 'Treasury account for Planet Naron', account: 'naron.world' },
+  // {
+  //   description: 'Treasury account for Binance Missions',
+  //   account: 'bina.world',
+  // },
 ];

@@ -8,7 +8,6 @@ import { getSupply } from './getSupply';
  * Fetch current or circulating supply
  *
  * @async
- * @param {Fastify} fastify
  * @param {Request} request
  * @param {WaxService} waxService
  * @param {EVMContractService} ethContractService

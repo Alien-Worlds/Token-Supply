@@ -1,8 +1,0 @@
-DOCKER_REGISTRY=ghcr.io/alien-worlds
-# PubKey: EOS5isff3TDGr9wB5hvRft23DUZKY7Uf5NxnLvzvLErma4o8sm1KB
-XFER_PRIVATE_KEY=''
-LANDHOLDERS_ACCOUNT='terra.worlds'
-BATCH_PERMISSION=runbatch
-ENDPOINT='https://api.waxsweden.org'
-BATCH_SIZE=200
-SUBMIT_TO_BLOCKCHAIN=true

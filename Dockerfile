@@ -1,6 +1,6 @@
 # BUILDER
 
-FROM node:18-alpine AS app-builder
+FROM node:24.22.1-alpine AS app-builder
 RUN apk add --no-cache --virtual build-dependencies curl git
 
 COPY --chown=node . /var/scripts/token-supply
@@ -13,7 +13,7 @@ RUN npm run build
 
 # PRODUCTION
 
-FROM node:18-alpine AS app
+FROM node:24.22.1-alpine AS app
 LABEL org.opencontainers.image.vendor='Dacoco GMBH' \
       org.opencontainers.image.description='Token Supply API'
 

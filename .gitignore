@@ -72,3 +72,6 @@ metadata
 dist
 openapi
 
+
+# Vitest
+.vitest/

@@ -1,10 +1,24 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import request from 'supertest';
 
-const mocks = vi.hoisted(() => ({ getTokenSupplies: vi.fn() }));
+const mocks = vi.hoisted(() => ({
+  getTokenSupplies: vi.fn(),
+  Contract: vi.fn(),
+  JsonRpcProvider: vi.fn(),
+}));
 vi.mock('./getTokenSupplies', () => ({
   getTokenSupplies: mocks.getTokenSupplies,
 }));
+// getSupply builds real EVMContractService instances. Stub ethers so no
+// provider is created and no network or name resolution is attempted, while
+// the services' own argument validation still runs.
+vi.mock('ethers', () => ({
+  Contract: mocks.Contract,
+  providers: { JsonRpcProvider: mocks.JsonRpcProvider },
+}));
+
+const ETH_CONTRACT = '0x' + 'e'.repeat(40);
+const BSC_CONTRACT = '0x' + 'b'.repeat(40);
 
 import { app, getSupply } from './app';
 
@@ -13,9 +27,11 @@ describe('app', () => {
     vi.stubEnv('WAX_ENDPOINT', 'https://wax.test');
     vi.stubEnv('ETH_ENDPOINT', 'https://eth.test');
     vi.stubEnv('BSC_ENDPOINT', 'https://bsc.test');
-    vi.stubEnv('ETH_TOKEN_CONTRACT', '0xeth');
-    vi.stubEnv('BSC_TOKEN_CONTRACT', '0xbsc');
+    vi.stubEnv('ETH_TOKEN_CONTRACT', ETH_CONTRACT);
+    vi.stubEnv('BSC_TOKEN_CONTRACT', BSC_CONTRACT);
     mocks.getTokenSupplies.mockReset();
+    mocks.Contract.mockReset();
+    mocks.JsonRpcProvider.mockReset();
   });
   afterEach(() => vi.unstubAllEnvs());
 
@@ -115,6 +131,21 @@ describe('app', () => {
 
       expect(await getSupply('supply', 'en-US')).toBe(7);
       expect(mocks.getTokenSupplies).toHaveBeenCalledOnce();
+    });
+
+    it('points each EVM service at its own endpoint and token contract', async () => {
+      mocks.getTokenSupplies.mockResolvedValue(7);
+
+      await getSupply('supply', null);
+
+      expect(mocks.JsonRpcProvider.mock.calls.map(c => c[0])).toEqual([
+        'https://eth.test',
+        'https://bsc.test',
+      ]);
+      expect(mocks.Contract.mock.calls.map(c => c[0])).toEqual([
+        ETH_CONTRACT,
+        BSC_CONTRACT,
+      ]);
     });
 
     it('fails when the WAX endpoint is not configured', async () => {

@@ -6,12 +6,17 @@
   "main": "index.js",
   "scripts": {
     "api": "ts-node src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "author": "",
+  "engines": {
+    "node": ">=24.22.1"
+  },
   "dependencies": {
     "@types/express": "^5.0.0",
-    "@types/node": "^22.10.1",
+    "@types/node": "^24.0.0",
     "dotenv": "^16.4.5",
     "eosio-helpers": "^5.1.5",
     "eosjs": "^22.0.0",
@@ -25,7 +30,11 @@
   },
   "devDependencies": {
     "@types/dotenv": "^8.2.0",
+    "@types/supertest": "^7.2.1",
     "@types/text-encoding": "0.0.36",
-    "prettier": "2.5.1"
+    "@vitest/coverage-v8": "^5.0.5",
+    "prettier": "2.5.1",
+    "supertest": "^7.3.1",
+    "vitest": "^5.0.5"
   }
 }

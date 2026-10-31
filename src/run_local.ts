@@ -1,6 +1,9 @@
 #!/usr/bin/env node
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import yargs from 'yargs';
-import { getSupply } from '.';
+import { getSupply } from './app';
 
 (async () => {
   const { type, localised } = await yargs(process.argv).options({

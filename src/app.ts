@@ -10,8 +10,15 @@ app.get('/token', async (req, res) => {
   const { type, localised } = req.query;
   const _type = typeof type === 'string' ? type : 'circulating';
   const _localised = typeof localised === 'string' ? localised : null;
-  const _res = await getSupply(_type, _localised);
-  res.json(_res);
+  try {
+    const _res = await getSupply(_type, _localised);
+    res.json(_res);
+  } catch (error) {
+    // Log the detail server-side only: RPC errors can include endpoint URLs
+    // carrying API keys, so the response body stays generic.
+    console.error('Failed to fetch token supply:', error);
+    res.status(500).json({ error: 'Failed to fetch token supply' });
+  }
 });
 
 export async function getSupply(type: string, localised: string) {

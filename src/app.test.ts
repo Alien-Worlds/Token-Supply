@@ -52,6 +52,63 @@ describe('app', () => {
     });
   });
 
+  describe('GET /token failures', () => {
+    beforeEach(() => {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+    afterEach(() => vi.restoreAllMocks());
+
+    it('responds 500 with a generic JSON error when a data source fails', async () => {
+      mocks.getTokenSupplies.mockRejectedValue(new Error('rpc down'));
+
+      const res = await request(app).get('/token?type=supply');
+
+      expect(res.status).toBe(500);
+      expect(res.body).toEqual({ error: 'Failed to fetch token supply' });
+    });
+
+    it('does not leak the underlying error message to the client', async () => {
+      mocks.getTokenSupplies.mockRejectedValue(
+        new Error('https://eth.test/v3/SECRET_API_KEY failed')
+      );
+
+      const res = await request(app).get('/token');
+
+      expect(res.text).not.toContain('SECRET_API_KEY');
+    });
+
+    it('logs the underlying error server-side', async () => {
+      const error = new Error('rpc down');
+      mocks.getTokenSupplies.mockRejectedValue(error);
+
+      await request(app).get('/token');
+
+      expect(console.error).toHaveBeenCalledWith(
+        'Failed to fetch token supply:',
+        error
+      );
+    });
+
+    it('responds 500 when the service is misconfigured', async () => {
+      vi.stubEnv('WAX_ENDPOINT', '');
+
+      const res = await request(app).get('/token');
+
+      expect(res.status).toBe(500);
+      expect(res.body).toEqual({ error: 'Failed to fetch token supply' });
+    });
+
+    it('keeps serving requests after a failure', async () => {
+      mocks.getTokenSupplies.mockRejectedValueOnce(new Error('rpc down'));
+      mocks.getTokenSupplies.mockResolvedValueOnce(42);
+
+      expect((await request(app).get('/token')).status).toBe(500);
+      const ok = await request(app).get('/token');
+      expect(ok.status).toBe(200);
+      expect(ok.body).toBe(42);
+    });
+  });
+
   describe('getSupply', () => {
     it('builds services from the environment and delegates', async () => {
       mocks.getTokenSupplies.mockResolvedValue(7);

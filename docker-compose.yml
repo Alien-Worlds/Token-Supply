@@ -10,7 +10,5 @@ services:
           - BSC_TOKEN_CONTRACT=${BSC_TOKEN_CONTRACT}
           - WAX_ENDPOINT=${WAX_ENDPOINT}
           - SERVER_PORT=${SERVER_PORT}
-      command:
-          ['npm', 'run', 'api']
       restart: on-failure
     

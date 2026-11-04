@@ -18,19 +18,63 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version-file: .nvmrc
           cache: npm
 
+      # --ignore-scripts: no dependency install scripts run
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-scripts
 
       - name: Type check and build
         run: npm run build
 
       - name: Test with coverage
         run: npm run test:coverage
+
+      # Report only: the production dependencies currently have known advisories.
+      - name: Dependency audit (non-blocking)
+        run: npm audit --omit=dev
+        continue-on-error: true
+
+  image:
+    name: Build and boot the Docker image
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Build
+        run: docker build --pull -t token-supply:ci .
+
+      # The upstream chain endpoints are deliberately unreachable. The service
+      # must start, listen, and answer /token with its handled 500 error rather
+      # than crash. It does not prove the real endpoints work.
+      - name: Boot
+        run: |
+          docker run -d --name token-supply -p 3000:3000 \
+            -e SERVER_PORT=3000 \
+            -e ETH_ENDPOINT=http://127.0.0.1:9 \
+            -e ETH_TOKEN_CONTRACT=0x0000000000000000000000000000000000000000 \
+            -e BSC_ENDPOINT=http://127.0.0.1:9 \
+            -e BSC_TOKEN_CONTRACT=0x0000000000000000000000000000000000000000 \
+            -e WAX_ENDPOINT=http://127.0.0.1:9 \
+            token-supply:ci
+          for i in $(seq 1 30); do
+            curl -s -o /dev/null http://localhost:3000/token && break
+            sleep 1
+          done
+          code=$(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000/token)
+          echo "GET /token -> $code"
+          docker logs token-supply
+          test "$code" = 500
+          test "$(docker inspect -f '{{.State.Running}}' token-supply)" = true

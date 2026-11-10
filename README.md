@@ -19,7 +19,8 @@ the circulating supply.
 | `?type=supply` | total supply as a number |
 | `?type=circulating` | supply minus excluded balances, as a number |
 | `?type=detailed` | `{ total_supply, exclusions: { wax, eth, bsc }, supply_after_exclusions }` |
-| any of the above with `localised=en-US` | a string with four decimals, e.g. `"1,000,000.0000 TLM"` |
+| `?type=supply&localised=en-US` or `?type=circulating&localised=en-US` | a string with four decimals, e.g. `"1,000,000.0000 TLM"` |
+| `?type=detailed&localised=en-US` | the detailed object above, with only `supply_after_exclusions` formatted as a localized string |
 | unknown `type` | `200` with the string `"Invalid type"` |
 | a data source fails or config is missing | `500` with `{"error":"Failed to fetch token supply"}` |
 
@@ -56,7 +57,8 @@ Create a `.env` file containing the variables above, then:
 ```sh
 npm ci
 npm run api
-curl "localhost:$SERVER_PORT/token?type=supply"
+# In a second terminal, replace 3000 with SERVER_PORT from .env:
+curl "http://localhost:3000/token?type=supply"
 ```
 
 `npm run api` runs `src/index.ts` through `ts-node` and is for development.

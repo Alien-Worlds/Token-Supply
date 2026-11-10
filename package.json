@@ -36,5 +36,16 @@
     "prettier": "2.5.1",
     "supertest": "^7.3.1",
     "vitest": "^5.0.5"
+  },
+  "overrides": {
+    "elliptic": {
+      ".": "6.6.1",
+      "bn.js": "4.12.5"
+    },
+    "ws": "8.21.0",
+    "@babel/runtime": "7.26.10",
+    "eosjs": {
+      "bn.js": "5.2.5"
+    }
   }
 }
